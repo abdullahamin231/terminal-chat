@@ -52,9 +52,9 @@ gcc -o client client.c
 
 ## Learning Objectives
 
-[X] Understand the basics of socket programming.
-[ ] Learn how to create a server and client using sockets.
-[ ] Learn how to handle multiple clients using threads.
+- [x] Understand the basics of socket programming.
+- [ ] Learn how to create a server and client using sockets.
+- [ ] Learn how to handle multiple clients using threads.
 
 ## Contributing
 
