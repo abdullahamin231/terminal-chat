@@ -41,29 +41,35 @@ int main()
 
   printf("Connected to the server.\n");
 
-  // Send data to the server
-  const char *message = "Hello from client!";
-  if (send(client_fd, message, strlen(message), 0) == -1)
+  while (1)
   {
-    perror("Send to server failed.");
-    close(client_fd);
-    exit(EXIT_FAILURE);
+    char message[BUFFER_SIZE];
+    printf("Enter message (type 'quit' to exit): ");
+    fgets(message, BUFFER_SIZE, stdin);
+    message[strcspn(message, "\n")] = '\0'; // Remove newline
+
+    if (strcmp(message, "quit") == 0)
+      break;
+
+    if (send(client_fd, message, strlen(message), 0) == -1)
+    {
+      perror("Send to server failed.");
+      break;
+    }
+
+    printf("Message sent to server.\n");
+
+    char buffer[BUFFER_SIZE];
+    int bytes_received = recv(client_fd, buffer, BUFFER_SIZE - 1, 0);
+    if (bytes_received == -1)
+    {
+      perror("Receive from server failed.");
+      break;
+    }
+
+    buffer[bytes_received] = '\0';
+    printf("Server: %s\n", buffer);
   }
-
-  printf("Message sent to the server.\n");
-
-  // Receive response from the server
-  char buffer[BUFFER_SIZE];
-  int bytes_received = recv(client_fd, buffer, BUFFER_SIZE - 1, 0); // Leave space for null terminator
-  if (bytes_received == -1)
-  {
-    perror("Receive from server failed.");
-    close(client_fd);
-    exit(EXIT_FAILURE);
-  }
-
-  buffer[bytes_received] = '\0'; // Null-terminate the received data
-  printf("Server: %s\n", buffer);
 
   // Close the socket
   close(client_fd);

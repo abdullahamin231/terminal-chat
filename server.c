@@ -45,49 +45,47 @@ int main(int argc, char *argv[])
 	printf("Server is listening on port %d\n", PORT);
 
 	// Accept incoming connections
+	int client_fd;
 	struct sockaddr_in client_sa;
-	socklen_t client_len = sizeof(client_sa);
+	socklen_t ca_len = sizeof(client_sa);
 
-	// Blocks the program until a client connects
-	int client_fd = accept(server_fd, (struct sockaddr *)&client_sa, &client_len);
-	if (client_fd == -1)
+	while (1)
 	{
-		perror("Accept failed");
-		close(server_fd);
-		exit(EXIT_FAILURE);
+		client_fd = accept(server_fd, (struct sockaddr *)&client_sa, &ca_len);
+		if (client_fd == -1)
+		{
+			perror("Accept failed.");
+			continue;
+		}
+
+		printf("Connection established with client: %s:%d\n",
+					 inet_ntoa(client_sa.sin_addr), ntohs(client_sa.sin_port));
+
+		char buffer[BUFFER_SIZE];
+		int bytes_recieved = recv(client_fd, buffer, BUFFER_SIZE - 1, 0);
+		if (bytes_recieved > 0)
+		{
+			buffer[bytes_recieved] = '\0';
+			printf("Client: %s\n", buffer);
+
+			if (send(client_fd, "Hello from server!", 18, 0) == -1)
+			{
+				perror("Send failed.");
+			}
+		}
+		else if (bytes_recieved == 0)
+		{
+			printf("Client disconnected.\n");
+		}
+		else
+		{
+			perror("Recieved failed.");
+		}
 	}
-
-	printf("Connected to client.\n");
-
-	// Now we can communicate with the client
-	char buffer[BUFFER_SIZE];
-	int bytes_received = recv(client_fd, buffer, BUFFER_SIZE, 0);
-	if (bytes_received == -1)
-	{
-		perror("Receive failed");
-		close(client_fd);
-		close(server_fd);
-		exit(EXIT_FAILURE);
-	}
-
-	buffer[bytes_received] = '\0'; // Null-terminate the received message
-	printf("Client: %s\n", buffer);
-
-	// Send a response to the client
-	const char *response = "Hello from server!";
-	if (send(client_fd, response, strlen(response), 0) == -1)
-	{
-		perror("Send failed");
-		close(client_fd);
-		close(server_fd);
-		exit(EXIT_FAILURE);
-	}
-
-	printf("Response sent to client.\n");
 
 	// Close the sockets
-	close(client_fd);
 	close(server_fd);
+	close(client_fd);
 
 	return 0;
 }
